@@ -1,7 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { StepProps } from "../types";
+
+/* =========================================================================
+   LETRA DO PLANO NO NÚMERO DO CONTRATO
+======================================================================== */
+const LETRA_POR_PLANO: Record<string, string> = {
+  Bronze: "B",
+  Prata: "P",
+  Ouro: "D",
+  Diamante: "A",
+};
+
+function aplicarLetraDoPlano(
+  numeroContrato: string | undefined,
+  plano: string | undefined
+): string {
+  const base = (numeroContrato || "").trim();
+  const letra = plano ? LETRA_POR_PLANO[plano] : undefined;
+
+  if (!base || !letra) return base;
+
+  // Remove a letra de plano já existente no final (se houver) pra não duplicar
+  const semLetraAnterior = base.replace(/[BPDA]$/i, "");
+  return `${semLetraAnterior}${letra}`;
+}
 
 /* =========================================================================
    TIPOS DE ENTRADA
@@ -355,6 +379,10 @@ export function StepPagamento({
     setFormData((prev: any) => ({
       ...prev,
       tipoContratoNome: novoPlano,
+      numeroContrato:
+        prev.tipoVenda === "Online"
+          ? prev.numeroContrato
+          : aplicarLetraDoPlano(prev.numeroContrato, novoPlano),
       valorEntrada: proximaEntrada,
       formaDePagamentoEntradaNome:
         tipoEntradaNovo === TIPO_ENTRADA.COM_ENTRADA
@@ -369,6 +397,24 @@ export function StepPagamento({
       detalhesParcelamento: "",
     }));
   };
+
+  // Garante a letra correta assim que essa etapa carrega (cobre o caso do
+  // plano padrão já vir selecionado sem o vendedor mexer no dropdown).
+  useEffect(() => {
+    if (!setFormData) return;
+    if (formData.tipoEnvioContrato === "Digital") return;
+    if (formData.tipoVenda === "Online") return;
+
+    const plano = formData.tipoContratoNome;
+    if (!plano) return;
+
+    setFormData((prev: any) => {
+      const atualizado = aplicarLetraDoPlano(prev.numeroContrato, plano);
+      if (atualizado === prev.numeroContrato) return prev;
+      return { ...prev, numeroContrato: atualizado };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.tipoContratoNome]);
 
   const selecionarVaiTerEntrada = (vaiTer: boolean) => {
     if (!setFormData) return;
