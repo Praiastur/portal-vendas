@@ -5,12 +5,27 @@ import { StepProps } from "../types";
 import { Search, Loader2 } from "lucide-react";
 import api from "@/service/api";
 
+function isFilled(value: unknown) {
+  return String(value ?? "").trim() !== "";
+}
+
 export function StepCoTitular({
   formData,
   handleChange,
   setFormData,
 }: StepProps) {
   const [loading, setLoading] = useState(false);
+
+  // Assim que o vendedor mexe em qualquer campo do co-titular, nome, CPF,
+  // telefone e data de nascimento passam a ser obrigatórios (igual titular).
+  const iniciouPreenchimento =
+    isFilled(formData.nomeCoTitular) ||
+    isFilled(formData.cpfCoTitular) ||
+    isFilled(formData.rgCoTitular) ||
+    isFilled(formData.telefoneCoTitular) ||
+    isFilled(formData.dataNascimentoCoTitular) ||
+    isFilled(formData.emailCoTitular) ||
+    isFilled(formData.profissaoCoTitular);
 
   const handleBuscarCPF = async () => {
     const cpfLimpo = formData.cpfCoTitular?.replace(/\D/g, "") || "";
@@ -52,13 +67,17 @@ export function StepCoTitular({
         <div className="relative">
           {/* MUDANÇA AQUI: text-gray-900 */}
           <label className="text-sm font-bold text-gray-900 block mb-1">
-            CPF
+            CPF{" "}
+            {iniciouPreenchimento && (
+              <span className="text-red-500">*</span>
+            )}
           </label>
           <div className="relative flex items-center">
             <input
               name="cpfCoTitular"
               value={formData.cpfCoTitular}
               onChange={handleChange}
+              required={iniciouPreenchimento}
               className="w-full border p-2.5 rounded-lg pr-12 outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               placeholder="000.000.000-00"
               maxLength={14}
@@ -80,10 +99,11 @@ export function StepCoTitular({
         </div>
 
         <Input
-          label="Nome Completo"
+          label={iniciouPreenchimento ? "Nome Completo *" : "Nome Completo"}
           name="nomeCoTitular"
           value={formData.nomeCoTitular}
           onChange={handleChange}
+          required={iniciouPreenchimento}
           placeholder="Digite o nome completo"
           pattern="^\S+ .+$"
           title="Por favor, digite o nome e o sobrenome"
@@ -115,18 +135,24 @@ export function StepCoTitular({
 
         {/* DATA DE NASCIMENTO (IMPORTANTE PARA A BUSCA) */}
         <Input
-          label="Data de Nascimento"
+          label={
+            iniciouPreenchimento
+              ? "Data de Nascimento *"
+              : "Data de Nascimento"
+          }
           type="date"
           name="dataNascimentoCoTitular"
           value={formData.dataNascimentoCoTitular}
           onChange={handleChange}
+          required={iniciouPreenchimento}
         />
 
         <Input
-          label="Telefone"
+          label={iniciouPreenchimento ? "Telefone *" : "Telefone"}
           name="telefoneCoTitular"
           value={formData.telefoneCoTitular}
           onChange={handleChange}
+          required={iniciouPreenchimento}
           placeholder="(00) 00000-0000"
         />
         <Input
@@ -135,7 +161,7 @@ export function StepCoTitular({
           name="emailCoTitular"
           value={formData.emailCoTitular}
           onChange={handleChange}
-          placeholder="email@exemplo.com"
+          placeholder="Opcional — se não preencher, usamos um e-mail padrão"
         />
         <Input
           label="Profissão"

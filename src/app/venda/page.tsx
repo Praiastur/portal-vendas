@@ -187,6 +187,40 @@ export default function VendaPage() {
       }
     }
 
+    // STEP 2 - CO-TITULAR (opcional, mas se começar a preencher, vira obrigatório)
+    if (currentStep === 2) {
+      const iniciouCoTitular =
+        isFilled(formData.nomeCoTitular) ||
+        isFilled(formData.cpfCoTitular) ||
+        isFilled(formData.rgCoTitular) ||
+        isFilled(formData.telefoneCoTitular) ||
+        isFilled(formData.dataNascimentoCoTitular) ||
+        isFilled(formData.emailCoTitular) ||
+        isFilled(formData.profissaoCoTitular);
+
+      if (iniciouCoTitular) {
+        if (!isFilled(formData.nomeCoTitular)) {
+          toast.error("Preencha o nome do co-titular.");
+          return false;
+        }
+
+        if (!isFilled(formData.cpfCoTitular)) {
+          toast.error("Preencha o CPF do co-titular.");
+          return false;
+        }
+
+        if (!isFilled(formData.telefoneCoTitular)) {
+          toast.error("Preencha o telefone do co-titular.");
+          return false;
+        }
+
+        if (!isFilled(formData.dataNascimentoCoTitular)) {
+          toast.error("Preencha a data de nascimento do co-titular.");
+          return false;
+        }
+      }
+    }
+
     // STEP 4 - ENDEREÇO
     if (currentStep === 4) {
       if (!isFilled(formData.cep)) {
