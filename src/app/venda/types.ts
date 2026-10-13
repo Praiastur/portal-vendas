@@ -13,6 +13,9 @@ export interface VendaFormData {
   // --- Tipo envio contrato ---
   tipoEnvioContrato?: "Digital" | "Manual";
 
+  // --- Estrangeiro (Paraguai): vale pro titular e é herdado por co-titular e dependentes ---
+  estrangeiro?: boolean;
+
   // --- Titular ---
   nomeTitular: string;
   cpfTitular: string;

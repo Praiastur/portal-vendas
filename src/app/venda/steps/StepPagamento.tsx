@@ -315,6 +315,11 @@ export function StepPagamento({
     }).format(val);
   };
 
+  const estrangeiro = Boolean(formData.estrangeiro);
+  // Omie não emite boleto pra cliente estrangeiro (sem CPF)
+  const semBoleto = <T extends { value: string }>(opcoes: T[]) =>
+    estrangeiro ? opcoes.filter((o) => !/boleto/i.test(o.value)) : opcoes;
+
   const planoConfig = getConfigPlano(formData.tipoContratoNome || "");
   const tipoEntradaAtual = String(
     (formData as any).tipoEntrada || TIPO_ENTRADA.COM_ENTRADA
@@ -724,7 +729,7 @@ export function StepPagamento({
                   className="border p-3.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 shadow-sm text-sm"
                 >
                   <option value="">Selecione...</option>
-                  {OPCOES_ENTRADA.map((opcao) => (
+                  {semBoleto(OPCOES_ENTRADA).map((opcao) => (
                     <option key={`entrada-${opcao.value}`} value={opcao.value}>
                       {opcao.label}
                     </option>
@@ -887,12 +892,17 @@ export function StepPagamento({
                 className="border p-3.5 rounded-xl bg-white outline-none focus:ring-2 focus:ring-black text-gray-900 shadow-sm text-sm"
               >
                 <option value="">Selecione...</option>
-                {OPCOES_PLANO.map((opcao) => (
+                {semBoleto(OPCOES_PLANO).map((opcao) => (
                   <option key={`plano-${opcao.value}`} value={opcao.value}>
                     {opcao.label}
                   </option>
                 ))}
               </select>
+              {estrangeiro && (
+                <span className="text-xs text-amber-700">
+                  Cliente estrangeiro: boleto indisponível, o pagamento é feito por Pix.
+                </span>
+              )}
             </div>
 
             <Input

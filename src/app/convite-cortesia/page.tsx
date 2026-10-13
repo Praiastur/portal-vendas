@@ -9,6 +9,11 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import {
+  documentoEstrangeiroValido,
+  limparDocumentoEstrangeiro,
+  telefoneInternacionalValido,
+} from "../venda/documentoEstrangeiro";
+import {
   ArrowLeft,
   Send,
   Gift,
@@ -348,6 +353,7 @@ export default function ConviteCortesiaPage() {
   const [loadingCidades, setLoadingCidades] = useState(false);
   const [cidades, setCidades] = useState<CidadeOption[]>([]);
   const [apiError, setApiError] = useState("");
+  const [estrangeiro, setEstrangeiro] = useState(false);
 
   const [estadoPickerOpen, setEstadoPickerOpen] = useState(false);
   const [cidadePickerOpen, setCidadePickerOpen] = useState(false);
@@ -395,7 +401,7 @@ export default function ConviteCortesiaPage() {
 
   useEffect(() => {
     async function carregarCidades() {
-      if (!form.estado) {
+      if (!form.estado || estrangeiro) {
         setCidades([]);
         return;
       }
@@ -430,7 +436,7 @@ export default function ConviteCortesiaPage() {
     }
 
     carregarCidades();
-  }, [form.estado]);
+  }, [form.estado, estrangeiro]);
 
   const clearFieldError = (field: keyof ErrorState) => {
     if (errors[field]) {
@@ -443,8 +449,16 @@ export default function ConviteCortesiaPage() {
 
     let finalValue = value;
 
-    if (name === "cpf") finalValue = formatCPF(value);
-    if (name === "telefone") finalValue = formatPhone(value);
+    if (name === "cpf") {
+      finalValue = estrangeiro
+        ? limparDocumentoEstrangeiro(value)
+        : formatCPF(value);
+    }
+    if (name === "telefone") {
+      finalValue = estrangeiro
+        ? value.replace(/[^\d+\s]/g, "").slice(0, 20)
+        : formatPhone(value);
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -462,9 +476,13 @@ export default function ConviteCortesiaPage() {
         return nomes.length >= 2;
       }
       case "cpf":
-        return isValidCPF(value);
+        return estrangeiro
+          ? documentoEstrangeiroValido(value)
+          : isValidCPF(value);
       case "telefone":
-        return onlyDigits(value).length === 11;
+        return estrangeiro
+          ? telefoneInternacionalValido(value)
+          : onlyDigits(value).length === 11;
       case "email":
         return isValidEmail(value);
       case "cidade":
@@ -509,6 +527,26 @@ export default function ConviteCortesiaPage() {
     );
   };
 
+  const handleToggleEstrangeiro = (checked: boolean) => {
+    setEstrangeiro(checked);
+    setForm((prev) => ({
+      ...prev,
+      cpf: "",
+      telefone: "",
+      cidade: "",
+      estado: checked ? "EX" : "",
+    }));
+    setErrors({
+      nomeGanhador: false,
+      cpf: false,
+      telefone: false,
+      email: false,
+      cidade: false,
+      estado: false,
+    });
+    setApiError("");
+  };
+
   const handleSelectEstado = (uf: string) => {
     setForm((prev) => ({
       ...prev,
@@ -545,11 +583,12 @@ export default function ConviteCortesiaPage() {
     try {
       const payload = {
         nomeGanhador: form.nomeGanhador.trim(),
-        cpf: onlyDigits(form.cpf),
+        cpf: estrangeiro ? form.cpf.trim() : onlyDigits(form.cpf),
         telefone: onlyDigits(form.telefone),
         email: form.email.trim().toLowerCase(),
-        cidade: form.cidade,
+        cidade: form.cidade.trim(),
         estado: form.estado,
+        estrangeiro,
       };
 
       const response = await api.post("/api/convites/cortesia", payload);
@@ -615,6 +654,22 @@ export default function ConviteCortesiaPage() {
               </div>
 
               <div className="space-y-2.5 px-3 pb-3">
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                  <input
+                    type="checkbox"
+                    checked={estrangeiro}
+                    onChange={(e) => handleToggleEstrangeiro(e.target.checked)}
+                    className="mt-1 h-4 w-4"
+                  />
+                  <span className="text-sm text-gray-900">
+                    <b>Cliente estrangeiro (Paraguai)</b>
+                    <span className="mt-0.5 block text-xs text-gray-600">
+                      Usa RUC/Cédula no lugar do CPF e telefone com código do
+                      país.
+                    </span>
+                  </span>
+                </label>
+
                 <div>
                   <Input
                     label="Nome do Ganhador"
@@ -639,13 +694,13 @@ export default function ConviteCortesiaPage() {
 
                 <div>
                   <Input
-                    label="CPF"
+                    label={estrangeiro ? "RUC / Cédula" : "CPF"}
                     name="cpf"
                     value={form.cpf}
                     onChange={handleChangeInput}
                     onBlur={handleBlurInput}
                     required
-                    placeholder="000.000.000-00"
+                    placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
                     className={`h-11 text-sm ${
                       errors.cpf
                         ? "border-red-500 ring-1 ring-red-500 focus:ring-red-500"
@@ -654,7 +709,9 @@ export default function ConviteCortesiaPage() {
                   />
                   {errors.cpf && (
                     <span className="mt-1 block text-[11px] text-red-500">
-                      Digite um CPF válido.
+                      {estrangeiro
+                        ? "Digite um RUC/Cédula válido (5 a 9 dígitos, ex: 1234567-8)."
+                        : "Digite um CPF válido."}
                     </span>
                   )}
                 </div>
@@ -667,7 +724,9 @@ export default function ConviteCortesiaPage() {
                     onChange={handleChangeInput}
                     onBlur={handleBlurInput}
                     required
-                    placeholder="(00) 00000-0000"
+                    placeholder={
+                      estrangeiro ? "+595 981 123456" : "(00) 00000-0000"
+                    }
                     className={`h-11 text-sm ${
                       errors.telefone
                         ? "border-red-500 ring-1 ring-red-500 focus:ring-red-500"
@@ -676,7 +735,9 @@ export default function ConviteCortesiaPage() {
                   />
                   {errors.telefone && (
                     <span className="mt-1 block text-[11px] text-red-500">
-                      Digite um WhatsApp válido.
+                      {estrangeiro
+                        ? "Digite o telefone com o código do país (ex: +595 981 123456)."
+                        : "Digite um WhatsApp válido."}
                     </span>
                   )}
                 </div>
@@ -704,6 +765,40 @@ export default function ConviteCortesiaPage() {
                   )}
                 </div>
 
+                {estrangeiro ? (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="mb-1 block text-[13px] font-medium text-gray-700">
+                        País
+                      </label>
+                      <div className="flex h-11 items-center rounded-2xl border border-gray-200 bg-gray-100 px-4 text-sm text-gray-600">
+                        Paraguai (EX)
+                      </div>
+                    </div>
+
+                    <div>
+                      <Input
+                        label="Cidade"
+                        name="cidade"
+                        value={form.cidade}
+                        onChange={handleChangeInput}
+                        onBlur={handleBlurInput}
+                        required
+                        placeholder="Ex: Ciudad del Este"
+                        className={`h-11 text-sm ${
+                          errors.cidade
+                            ? "border-red-500 ring-1 ring-red-500 focus:ring-red-500"
+                            : ""
+                        }`}
+                      />
+                      {errors.cidade && (
+                        <span className="mt-1 block text-[11px] text-red-500">
+                          Informe a cidade.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <PickerField
@@ -747,6 +842,7 @@ export default function ConviteCortesiaPage() {
                     )}
                   </div>
                 </div>
+                )}
 
                 {apiError && (
                   <div className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
