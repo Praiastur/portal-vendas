@@ -72,6 +72,7 @@ export default function VendaPage() {
     tipoContratoNome: "Ouro",
     tipoEntrada: "COM_ENTRADA",
     estrangeiro: false,
+    paisEstrangeiro: "PY",
     numeroContrato: "",
     valorTotalPlano: "",
     nomeTitular: "",
@@ -167,14 +168,14 @@ export default function VendaPage() {
       if (!isFilled(formData.cpfTitular)) {
         toast.error(
           estrangeiro
-            ? "Preencha o RUC/Cédula do titular."
+            ? "Preencha o documento do titular."
             : "Preencha o CPF do titular."
         );
         return false;
       }
 
       if (estrangeiro && !documentoEstrangeiroValido(formData.cpfTitular)) {
-        toast.error("RUC/Cédula do titular inválido. Use de 5 a 9 dígitos, ex: 1234567-8.");
+        toast.error("Documento do titular inválido. Informe ao menos 4 caracteres.");
         return false;
       }
 
@@ -184,7 +185,7 @@ export default function VendaPage() {
       }
 
       if (estrangeiro && !telefoneInternacionalValido(formData.telefoneTitular)) {
-        toast.error("Telefone do titular inválido. Informe com o código do país, ex: +595 981 123456.");
+        toast.error("Telefone do titular inválido. Informe com o código do país.");
         return false;
       }
 
@@ -238,14 +239,14 @@ export default function VendaPage() {
         if (!isFilled(formData.cpfCoTitular)) {
           toast.error(
             estrangeiro
-              ? "Preencha o RUC/Cédula do co-titular."
+              ? "Preencha o documento do co-titular."
               : "Preencha o CPF do co-titular."
           );
           return false;
         }
 
         if (estrangeiro && !documentoEstrangeiroValido(formData.cpfCoTitular)) {
-          toast.error("RUC/Cédula do co-titular inválido. Use de 5 a 9 dígitos, ex: 1234567-8.");
+          toast.error("Documento do co-titular inválido. Informe ao menos 4 caracteres.");
           return false;
         }
 
@@ -255,7 +256,7 @@ export default function VendaPage() {
         }
 
         if (estrangeiro && !telefoneInternacionalValido(formData.telefoneCoTitular)) {
-          toast.error("Telefone do co-titular inválido. Informe com o código do país, ex: +595 981 123456.");
+          toast.error("Telefone do co-titular inválido. Informe com o código do país.");
           return false;
         }
 
@@ -271,7 +272,7 @@ export default function VendaPage() {
       for (let i = 1; i <= 4; i++) {
         const doc = formData[`cpfDependente${i}`];
         if (isFilled(doc) && !documentoEstrangeiroValido(doc)) {
-          toast.error(`RUC/Cédula do dependente ${i} inválido. Use de 5 a 9 dígitos, ex: 1234567-8.`);
+          toast.error(`Documento do dependente ${i} inválido. Informe ao menos 4 caracteres.`);
           return false;
         }
 

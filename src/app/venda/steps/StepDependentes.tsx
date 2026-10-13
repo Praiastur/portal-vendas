@@ -70,14 +70,14 @@ export function StepDependentes({
 
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-bold text-gray-900">
-                  {estrangeiro ? "RUC / Cédula" : "CPF"}
+                  {estrangeiro ? "Documento" : "CPF"}
                 </label>
                 <Input
                   name={`cpfDependente${i}`}
                   value={formData[`cpfDependente${i}`]}
                   onChange={(e) => handleChangeDocumento(e, `cpfDependente${i}`)}
-                  placeholder={estrangeiro ? "1234567-8" : undefined}
-                  maxLength={estrangeiro ? 11 : undefined}
+                  placeholder={estrangeiro ? "Número do documento" : undefined}
+                  maxLength={estrangeiro ? 20 : undefined}
                   className="bg-white"
                 />
               </div>
@@ -115,7 +115,7 @@ export function StepDependentes({
                   name={`telefoneDependente${i}`}
                   value={formData[`telefoneDependente${i}`]}
                   onChange={handleChange}
-                  placeholder={estrangeiro ? "+595 981 123456" : undefined}
+                  placeholder={estrangeiro ? "+código do país e número" : undefined}
                   className="bg-white"
                 />
               </div>

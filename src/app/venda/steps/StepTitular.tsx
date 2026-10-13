@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/Input";
 import { StepProps } from "../types";
 import { Search, Loader2 } from "lucide-react";
 import api from "@/service/api";
-import { limparDocumentoEstrangeiro } from "../documentoEstrangeiro";
+import {
+  PAISES_LATINOS,
+  limparDocumentoEstrangeiro,
+} from "../documentoEstrangeiro";
 
 export function StepTitular({
   formData,
@@ -95,19 +98,39 @@ export function StepTitular({
             className="mt-1 h-4 w-4"
           />
           <span className="text-sm text-gray-900">
-            <b>Cliente estrangeiro (Paraguai)</b>
+            <b>Cliente estrangeiro</b>
             <span className="block text-xs text-gray-600 mt-0.5">
-              Usa RUC/Cédula no lugar do CPF. Vale também para co-titular e
-              dependentes. O contrato é enviado por e-mail e o pagamento não
-              pode ser por boleto.
+              Usa um documento do país de origem no lugar do CPF. Vale também
+              para co-titular e dependentes. O contrato é enviado por e-mail e
+              o pagamento não pode ser por boleto.
             </span>
           </span>
         </label>
 
-        {/* CAMPO DE CPF / RUC */}
+        {estrangeiro && (
+          <div className="md:col-span-2 flex flex-col gap-1">
+            <label className="text-sm font-bold text-gray-900">
+              País de origem <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="paisEstrangeiro"
+              value={formData.paisEstrangeiro || "PY"}
+              onChange={handleChange}
+              className="border p-2.5 rounded-lg bg-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {PAISES_LATINOS.map((p) => (
+                <option key={p.iso} value={p.iso}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* CAMPO DE CPF / DOCUMENTO ESTRANGEIRO */}
         <div className="relative">
           <label className="text-sm font-bold text-gray-900 block mb-1">
-            {estrangeiro ? "RUC / Cédula" : "CPF"}{" "}
+            {estrangeiro ? "Documento (RUC, Cédula, DNI, Passaporte...)" : "CPF"}{" "}
             {estrangeiro && <span className="text-red-500">*</span>}
           </label>
           <div className="relative flex items-center">
@@ -116,8 +139,8 @@ export function StepTitular({
               value={formData.cpfTitular}
               onChange={handleChangeDocumento}
               className="w-full border p-2.5 rounded-lg pr-12 outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-              placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
-              maxLength={estrangeiro ? 11 : 14}
+              placeholder={estrangeiro ? "Número do documento" : "000.000.000-00"}
+              maxLength={estrangeiro ? 20 : 14}
             />
             {!estrangeiro && (
               <button
@@ -227,7 +250,7 @@ export function StepTitular({
             onBlur={(e) => handleBlur("telefone", e.target.value)}
             required
             placeholder={
-              estrangeiro ? "+595 981 123456 (com código do país)" : "(00) 00000-0000"
+              estrangeiro ? "+código do país e número" : "(00) 00000-0000"
             }
             className={`bg-white ${
               errors.telefone ? "border-red-500 focus:ring-red-500" : ""
