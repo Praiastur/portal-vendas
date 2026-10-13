@@ -66,7 +66,7 @@ export function StepRevisao({ formData }: { formData: VendaFormData }) {
           <CardHeader title="Dados do Titular" />
           <div className="px-2">
             <InfoRow label="Nome" value={formData.nomeTitular} />
-            <InfoRow label="CPF" value={formData.cpfTitular} />
+            <InfoRow label={formData.estrangeiro ? "RUC / Cédula" : "CPF"} value={formData.cpfTitular} />
             <InfoRow label="RG" value={formData.rgTitular} />
             <InfoRow
               label="Nascimento"
@@ -86,7 +86,7 @@ export function StepRevisao({ formData }: { formData: VendaFormData }) {
             <CardHeader title="Dados do Co-Titular" />
             <div className="px-2">
               <InfoRow label="Nome" value={formData.nomeCoTitular} />
-              <InfoRow label="CPF" value={formData.cpfCoTitular} />
+              <InfoRow label={formData.estrangeiro ? "RUC / Cédula" : "CPF"} value={formData.cpfCoTitular} />
               <InfoRow label="Telefone" value={formData.telefoneCoTitular} />
               <InfoRow label="Sexo" value={formData.sexoCoTitular} />
             </div>
@@ -103,7 +103,7 @@ export function StepRevisao({ formData }: { formData: VendaFormData }) {
               <CardHeader title={`Dependente ${i}`} />
               <div className="px-2">
                 <InfoRow label="Nome" value={nome} />
-                <InfoRow label="CPF" value={formData[`cpfDependente${i}`]} />
+                <InfoRow label={formData.estrangeiro ? "RUC / Cédula" : "CPF"} value={formData[`cpfDependente${i}`]} />
                 <InfoRow
                   label="Parentesco"
                   value={formData[`parentescoDependente${i}`]}

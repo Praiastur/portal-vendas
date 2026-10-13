@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { StepProps } from "../types";
 import { Search, Loader2 } from "lucide-react";
 import api from "@/service/api";
+import { limparDocumentoEstrangeiro } from "../documentoEstrangeiro";
 
 function isFilled(value: unknown) {
   return String(value ?? "").trim() !== "";
@@ -15,6 +16,14 @@ export function StepCoTitular({
   setFormData,
 }: StepProps) {
   const [loading, setLoading] = useState(false);
+  const estrangeiro = Boolean(formData.estrangeiro);
+
+  const handleChangeDocumento = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!estrangeiro) return handleChange(e);
+
+    const valor = limparDocumentoEstrangeiro(e.target.value);
+    setFormData((prev) => ({ ...prev, cpfCoTitular: valor }));
+  };
 
   // Assim que o vendedor mexe em qualquer campo do co-titular, nome, CPF,
   // telefone e data de nascimento passam a ser obrigatórios (igual titular).
@@ -67,7 +76,7 @@ export function StepCoTitular({
         <div className="relative">
           {/* MUDANÇA AQUI: text-gray-900 */}
           <label className="text-sm font-bold text-gray-900 block mb-1">
-            CPF{" "}
+            {estrangeiro ? "RUC / Cédula" : "CPF"}{" "}
             {iniciouPreenchimento && (
               <span className="text-red-500">*</span>
             )}
@@ -76,25 +85,27 @@ export function StepCoTitular({
             <input
               name="cpfCoTitular"
               value={formData.cpfCoTitular}
-              onChange={handleChange}
+              onChange={handleChangeDocumento}
               required={iniciouPreenchimento}
               className="w-full border p-2.5 rounded-lg pr-12 outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              placeholder="000.000.000-00"
-              maxLength={14}
+              placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
+              maxLength={estrangeiro ? 11 : 14}
             />
-            <button
-              type="button"
-              onClick={handleBuscarCPF}
-              disabled={loading}
-              className="absolute right-2 p-1.5 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors disabled:opacity-50"
-              title="Buscar dados (Preencha a data antes!)"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-            </button>
+            {!estrangeiro && (
+              <button
+                type="button"
+                onClick={handleBuscarCPF}
+                disabled={loading}
+                className="absolute right-2 p-1.5 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors disabled:opacity-50"
+                title="Buscar dados (Preencha a data antes!)"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -153,7 +164,7 @@ export function StepCoTitular({
           value={formData.telefoneCoTitular}
           onChange={handleChange}
           required={iniciouPreenchimento}
-          placeholder="(00) 00000-0000"
+          placeholder={estrangeiro ? "+595 981 123456 (com código do país)" : "(00) 00000-0000"}
         />
         <Input
           label="Email"

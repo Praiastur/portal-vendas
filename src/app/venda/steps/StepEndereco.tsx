@@ -12,8 +12,11 @@ export function StepEndereco({
 }: StepProps) {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
+  const estrangeiro = Boolean(formData.estrangeiro);
 
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    if (estrangeiro) return;
+
     const cep = e.target.value.replace(/\D/g, "");
     if (cep.length !== 8) return;
 
@@ -42,7 +45,14 @@ export function StepEndereco({
 
   return (
     <Card>
-      <CardHeader title="Endereço do Titular" />
+      <CardHeader
+        title="Endereço do Titular"
+        subtitle={
+          estrangeiro
+            ? "Cliente estrangeiro: CEP, bairro e estado são opcionais."
+            : undefined
+        }
+      />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="relative">
           <Input
@@ -51,8 +61,8 @@ export function StepEndereco({
             value={formData.cep}
             onChange={handleChange}
             onBlur={handleCepBlur}
-            required
-            placeholder="Apenas números"
+            required={!estrangeiro}
+            placeholder={estrangeiro ? "Opcional" : "Apenas números"}
           />
           {cepLoading && (
             <Loader2 className="absolute right-3 top-9 animate-spin text-blue-500 h-5 w-5" />
@@ -78,7 +88,7 @@ export function StepEndereco({
             name="bairro"
             value={formData.bairro}
             onChange={handleChange}
-            required
+            required={!estrangeiro}
           />
         </div>
 
@@ -94,7 +104,7 @@ export function StepEndereco({
           name="estado"
           value={formData.estado}
           onChange={handleChange}
-          required
+          required={!estrangeiro}
         />
       </div>
     </Card>

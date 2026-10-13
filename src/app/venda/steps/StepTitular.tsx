@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/Input";
 import { StepProps } from "../types";
 import { Search, Loader2 } from "lucide-react";
 import api from "@/service/api";
+import { limparDocumentoEstrangeiro } from "../documentoEstrangeiro";
 
 export function StepTitular({
   formData,
@@ -11,6 +12,22 @@ export function StepTitular({
   setFormData,
 }: StepProps) {
   const [loading, setLoading] = useState(false);
+  const estrangeiro = Boolean(formData.estrangeiro);
+
+  const handleToggleEstrangeiro = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      estrangeiro: checked,
+      cpfTitular: "",
+    }));
+  };
+
+  const handleChangeDocumento = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!estrangeiro) return handleChange(e);
+
+    const valor = limparDocumentoEstrangeiro(e.target.value);
+    setFormData((prev) => ({ ...prev, cpfTitular: valor }));
+  };
 
   // 1. Adicionei 'nomeTitular' ao estado de erros
   const [errors, setErrors] = useState({
@@ -69,33 +86,54 @@ export function StepTitular({
     <Card>
       <CardHeader title="Dados do Titular" subtitle="Responsável financeiro" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* CAMPO DE CPF */}
+        {/* CLIENTE ESTRANGEIRO (vale pra titular, co-titular e dependentes) */}
+        <label className="md:col-span-2 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={estrangeiro}
+            onChange={(e) => handleToggleEstrangeiro(e.target.checked)}
+            className="mt-1 h-4 w-4"
+          />
+          <span className="text-sm text-gray-900">
+            <b>Cliente estrangeiro (Paraguai)</b>
+            <span className="block text-xs text-gray-600 mt-0.5">
+              Usa RUC/Cédula no lugar do CPF. Vale também para co-titular e
+              dependentes. O contrato é enviado por e-mail e o pagamento não
+              pode ser por boleto.
+            </span>
+          </span>
+        </label>
+
+        {/* CAMPO DE CPF / RUC */}
         <div className="relative">
           <label className="text-sm font-bold text-gray-900 block mb-1">
-            CPF
+            {estrangeiro ? "RUC / Cédula" : "CPF"}{" "}
+            {estrangeiro && <span className="text-red-500">*</span>}
           </label>
           <div className="relative flex items-center">
             <input
               name="cpfTitular"
               value={formData.cpfTitular}
-              onChange={handleChange}
+              onChange={handleChangeDocumento}
               className="w-full border p-2.5 rounded-lg pr-12 outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-              placeholder="000.000.000-00"
-              maxLength={14}
+              placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
+              maxLength={estrangeiro ? 11 : 14}
             />
-            <button
-              type="button"
-              onClick={handleBuscarCPF}
-              disabled={loading}
-              className="absolute right-2 p-1.5 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors disabled:opacity-50"
-              title="Buscar dados do CPF"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-            </button>
+            {!estrangeiro && (
+              <button
+                type="button"
+                onClick={handleBuscarCPF}
+                disabled={loading}
+                className="absolute right-2 p-1.5 bg-blue-100 text-blue-600 rounded-md hover:bg-blue-200 transition-colors disabled:opacity-50"
+                title="Buscar dados do CPF"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -188,7 +226,9 @@ export function StepTitular({
             }}
             onBlur={(e) => handleBlur("telefone", e.target.value)}
             required
-            placeholder="(00) 00000-0000"
+            placeholder={
+              estrangeiro ? "+595 981 123456 (com código do país)" : "(00) 00000-0000"
+            }
             className={`bg-white ${
               errors.telefone ? "border-red-500 focus:ring-red-500" : ""
             }`}
@@ -249,6 +289,12 @@ export function StepTitular({
           />
           {errors.email && (
             <span className="text-xs text-red-500">Email é obrigatório.</span>
+          )}
+          {estrangeiro && formData.tipoEnvioContrato === "Digital" && (
+            <span className="text-xs text-amber-700">
+              O contrato digital será enviado para este e-mail (cliente
+              estrangeiro não recebe por WhatsApp).
+            </span>
           )}
         </div>
       </div>

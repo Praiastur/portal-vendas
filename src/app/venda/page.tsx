@@ -16,6 +16,11 @@ import { StepEndereco } from "./steps/StepEndereco";
 import { StepPagamento } from "./steps/StepPagamento";
 import { StepRevisao } from "./steps/StepRevisao";
 import { VendaFormData } from "./types";
+import {
+  documentoEstrangeiroValido,
+  telefoneInternacionalValido,
+  emailGenerico,
+} from "./documentoEstrangeiro";
 
 const STEPS_LABELS = [
   "Contrato",
@@ -66,6 +71,7 @@ export default function VendaPage() {
     tipoVenda: "Presencial",
     tipoContratoNome: "Ouro",
     tipoEntrada: "COM_ENTRADA",
+    estrangeiro: false,
     numeroContrato: "",
     valorTotalPlano: "",
     nomeTitular: "",
@@ -133,6 +139,8 @@ export default function VendaPage() {
   };
 
   const validarStepAtual = () => {
+    const estrangeiro = Boolean(formData.estrangeiro);
+
     // STEP 0 - CONTRATO
     if (currentStep === 0) {
       const isDigital = formData.tipoEnvioContrato === "Digital";
@@ -157,7 +165,16 @@ export default function VendaPage() {
       }
 
       if (!isFilled(formData.cpfTitular)) {
-        toast.error("Preencha o CPF do titular.");
+        toast.error(
+          estrangeiro
+            ? "Preencha o RUC/Cédula do titular."
+            : "Preencha o CPF do titular."
+        );
+        return false;
+      }
+
+      if (estrangeiro && !documentoEstrangeiroValido(formData.cpfTitular)) {
+        toast.error("RUC/Cédula do titular inválido. Use de 5 a 9 dígitos, ex: 1234567-8.");
         return false;
       }
 
@@ -166,8 +183,22 @@ export default function VendaPage() {
         return false;
       }
 
+      if (estrangeiro && !telefoneInternacionalValido(formData.telefoneTitular)) {
+        toast.error("Telefone do titular inválido. Informe com o código do país, ex: +595 981 123456.");
+        return false;
+      }
+
       if (!isFilled(formData.emailTitular)) {
         toast.error("Preencha o e-mail do titular.");
+        return false;
+      }
+
+      if (
+        estrangeiro &&
+        formData.tipoEnvioContrato === "Digital" &&
+        emailGenerico(formData.emailTitular)
+      ) {
+        toast.error("Cliente estrangeiro recebe o contrato por e-mail. Informe o e-mail real do titular.");
         return false;
       }
 
@@ -205,12 +236,26 @@ export default function VendaPage() {
         }
 
         if (!isFilled(formData.cpfCoTitular)) {
-          toast.error("Preencha o CPF do co-titular.");
+          toast.error(
+            estrangeiro
+              ? "Preencha o RUC/Cédula do co-titular."
+              : "Preencha o CPF do co-titular."
+          );
+          return false;
+        }
+
+        if (estrangeiro && !documentoEstrangeiroValido(formData.cpfCoTitular)) {
+          toast.error("RUC/Cédula do co-titular inválido. Use de 5 a 9 dígitos, ex: 1234567-8.");
           return false;
         }
 
         if (!isFilled(formData.telefoneCoTitular)) {
           toast.error("Preencha o telefone do co-titular.");
+          return false;
+        }
+
+        if (estrangeiro && !telefoneInternacionalValido(formData.telefoneCoTitular)) {
+          toast.error("Telefone do co-titular inválido. Informe com o código do país, ex: +595 981 123456.");
           return false;
         }
 
@@ -221,9 +266,27 @@ export default function VendaPage() {
       }
     }
 
+    // STEP 3 - DEPENDENTES (documento só é validado quando estrangeiro e preenchido)
+    if (currentStep === 3 && estrangeiro) {
+      for (let i = 1; i <= 4; i++) {
+        const doc = formData[`cpfDependente${i}`];
+        if (isFilled(doc) && !documentoEstrangeiroValido(doc)) {
+          toast.error(`RUC/Cédula do dependente ${i} inválido. Use de 5 a 9 dígitos, ex: 1234567-8.`);
+          return false;
+        }
+
+        const tel = formData[`telefoneDependente${i}`];
+        if (isFilled(tel) && !telefoneInternacionalValido(tel)) {
+          toast.error(`Telefone do dependente ${i} inválido. Informe com o código do país.`);
+          return false;
+        }
+      }
+    }
+
     // STEP 4 - ENDEREÇO
     if (currentStep === 4) {
-      if (!isFilled(formData.cep)) {
+      // Estrangeiro mora fora: CEP, bairro e estado do Brasil não se aplicam
+      if (!estrangeiro && !isFilled(formData.cep)) {
         toast.error("Preencha o CEP.");
         return false;
       }
@@ -233,7 +296,7 @@ export default function VendaPage() {
         return false;
       }
 
-      if (!isFilled(formData.bairro)) {
+      if (!estrangeiro && !isFilled(formData.bairro)) {
         toast.error("Preencha o bairro.");
         return false;
       }
@@ -243,7 +306,7 @@ export default function VendaPage() {
         return false;
       }
 
-      if (!isFilled(formData.estado)) {
+      if (!estrangeiro && !isFilled(formData.estado)) {
         toast.error("Preencha o estado.");
         return false;
       }
@@ -278,6 +341,16 @@ export default function VendaPage() {
 
       if (!isFilled(formData.formaDePagamentoNome)) {
         toast.error("Selecione a forma de pagamento do plano.");
+        return false;
+      }
+
+      // A Omie não emite boleto pra cliente estrangeiro (sem CPF)
+      if (
+        estrangeiro &&
+        (/boleto/i.test(String(formData.formaDePagamentoNome)) ||
+          /boleto/i.test(String(formData.formaDePagamentoEntradaNome)))
+      ) {
+        toast.error("Cliente estrangeiro não pode pagar por boleto. Escolha Pix ou outra forma.");
         return false;
       }
     }

@@ -4,8 +4,25 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { StepProps } from "../types";
 import { Plus, Trash2 } from "lucide-react";
+import { limparDocumentoEstrangeiro } from "../documentoEstrangeiro";
 
-export function StepDependentes({ formData, handleChange }: StepProps) {
+export function StepDependentes({
+  formData,
+  handleChange,
+  setFormData,
+}: StepProps) {
+  const estrangeiro = Boolean(formData.estrangeiro);
+
+  const handleChangeDocumento = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    campo: string
+  ) => {
+    if (!estrangeiro) return handleChange(e);
+
+    const valor = limparDocumentoEstrangeiro(e.target.value);
+    setFormData((prev) => ({ ...prev, [campo]: valor }));
+  };
+
   // Controle local visual de quantos dependentes estão abertos
   const [qtd, setQtd] = useState(0);
 
@@ -52,11 +69,15 @@ export function StepDependentes({ formData, handleChange }: StepProps) {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-bold text-gray-900">CPF</label>
+                <label className="text-sm font-bold text-gray-900">
+                  {estrangeiro ? "RUC / Cédula" : "CPF"}
+                </label>
                 <Input
                   name={`cpfDependente${i}`}
                   value={formData[`cpfDependente${i}`]}
-                  onChange={handleChange}
+                  onChange={(e) => handleChangeDocumento(e, `cpfDependente${i}`)}
+                  placeholder={estrangeiro ? "1234567-8" : undefined}
+                  maxLength={estrangeiro ? 11 : undefined}
                   className="bg-white"
                 />
               </div>
@@ -94,6 +115,7 @@ export function StepDependentes({ formData, handleChange }: StepProps) {
                   name={`telefoneDependente${i}`}
                   value={formData[`telefoneDependente${i}`]}
                   onChange={handleChange}
+                  placeholder={estrangeiro ? "+595 981 123456" : undefined}
                   className="bg-white"
                 />
               </div>
