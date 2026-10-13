@@ -9,8 +9,11 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader } from "@/components/ui/Card";
 import {
+  PAISES_LATINOS,
+  PAIS_PADRAO,
   documentoEstrangeiroValido,
   limparDocumentoEstrangeiro,
+  limparTelefoneInternacional,
   telefoneInternacionalValido,
 } from "../venda/documentoEstrangeiro";
 import {
@@ -354,6 +357,7 @@ export default function ConviteCortesiaPage() {
   const [cidades, setCidades] = useState<CidadeOption[]>([]);
   const [apiError, setApiError] = useState("");
   const [estrangeiro, setEstrangeiro] = useState(false);
+  const [pais, setPais] = useState(PAIS_PADRAO);
 
   const [estadoPickerOpen, setEstadoPickerOpen] = useState(false);
   const [cidadePickerOpen, setCidadePickerOpen] = useState(false);
@@ -456,7 +460,7 @@ export default function ConviteCortesiaPage() {
     }
     if (name === "telefone") {
       finalValue = estrangeiro
-        ? value.replace(/[^\d+\s]/g, "").slice(0, 20)
+        ? limparTelefoneInternacional(value)
         : formatPhone(value);
     }
 
@@ -589,6 +593,7 @@ export default function ConviteCortesiaPage() {
         cidade: form.cidade.trim(),
         estado: form.estado,
         estrangeiro,
+        pais: estrangeiro ? pais : undefined,
       };
 
       const response = await api.post("/api/convites/cortesia", payload);
@@ -662,10 +667,10 @@ export default function ConviteCortesiaPage() {
                     className="mt-1 h-4 w-4"
                   />
                   <span className="text-sm text-gray-900">
-                    <b>Cliente estrangeiro (Paraguai)</b>
+                    <b>Cliente estrangeiro</b>
                     <span className="mt-0.5 block text-xs text-gray-600">
-                      Usa RUC/Cédula no lugar do CPF e telefone com código do
-                      país.
+                      Usa um documento do país de origem no lugar do CPF e
+                      telefone com código do país.
                     </span>
                   </span>
                 </label>
@@ -694,13 +699,13 @@ export default function ConviteCortesiaPage() {
 
                 <div>
                   <Input
-                    label={estrangeiro ? "RUC / Cédula" : "CPF"}
+                    label={estrangeiro ? "Documento (RUC, Cédula, DNI, Passaporte...)" : "CPF"}
                     name="cpf"
                     value={form.cpf}
                     onChange={handleChangeInput}
                     onBlur={handleBlurInput}
                     required
-                    placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
+                    placeholder={estrangeiro ? "Número do documento" : "000.000.000-00"}
                     className={`h-11 text-sm ${
                       errors.cpf
                         ? "border-red-500 ring-1 ring-red-500 focus:ring-red-500"
@@ -710,7 +715,7 @@ export default function ConviteCortesiaPage() {
                   {errors.cpf && (
                     <span className="mt-1 block text-[11px] text-red-500">
                       {estrangeiro
-                        ? "Digite um RUC/Cédula válido (5 a 9 dígitos, ex: 1234567-8)."
+                        ? "Informe o documento (mínimo 4 caracteres)."
                         : "Digite um CPF válido."}
                     </span>
                   )}
@@ -725,7 +730,7 @@ export default function ConviteCortesiaPage() {
                     onBlur={handleBlurInput}
                     required
                     placeholder={
-                      estrangeiro ? "+595 981 123456" : "(00) 00000-0000"
+                      estrangeiro ? "+código do país e número" : "(00) 00000-0000"
                     }
                     className={`h-11 text-sm ${
                       errors.telefone
@@ -736,7 +741,7 @@ export default function ConviteCortesiaPage() {
                   {errors.telefone && (
                     <span className="mt-1 block text-[11px] text-red-500">
                       {estrangeiro
-                        ? "Digite o telefone com o código do país (ex: +595 981 123456)."
+                        ? "Digite o telefone com o código do país."
                         : "Digite um WhatsApp válido."}
                     </span>
                   )}
@@ -771,9 +776,17 @@ export default function ConviteCortesiaPage() {
                       <label className="mb-1 block text-[13px] font-medium text-gray-700">
                         País
                       </label>
-                      <div className="flex h-11 items-center rounded-2xl border border-gray-200 bg-gray-100 px-4 text-sm text-gray-600">
-                        Paraguai (EX)
-                      </div>
+                      <select
+                        value={pais}
+                        onChange={(e) => setPais(e.target.value)}
+                        className="h-11 w-full rounded-2xl border border-gray-200 bg-white px-3 text-sm text-gray-900"
+                      >
+                        {PAISES_LATINOS.map((p) => (
+                          <option key={p.iso} value={p.iso}>
+                            {p.nome}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>

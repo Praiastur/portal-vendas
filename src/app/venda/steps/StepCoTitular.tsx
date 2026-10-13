@@ -76,7 +76,7 @@ export function StepCoTitular({
         <div className="relative">
           {/* MUDANÇA AQUI: text-gray-900 */}
           <label className="text-sm font-bold text-gray-900 block mb-1">
-            {estrangeiro ? "RUC / Cédula" : "CPF"}{" "}
+            {estrangeiro ? "Documento (RUC, Cédula, DNI, Passaporte...)" : "CPF"}{" "}
             {iniciouPreenchimento && (
               <span className="text-red-500">*</span>
             )}
@@ -88,8 +88,8 @@ export function StepCoTitular({
               onChange={handleChangeDocumento}
               required={iniciouPreenchimento}
               className="w-full border p-2.5 rounded-lg pr-12 outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              placeholder={estrangeiro ? "1234567-8" : "000.000.000-00"}
-              maxLength={estrangeiro ? 11 : 14}
+              placeholder={estrangeiro ? "Número do documento" : "000.000.000-00"}
+              maxLength={estrangeiro ? 20 : 14}
             />
             {!estrangeiro && (
               <button
@@ -164,7 +164,7 @@ export function StepCoTitular({
           value={formData.telefoneCoTitular}
           onChange={handleChange}
           required={iniciouPreenchimento}
-          placeholder={estrangeiro ? "+595 981 123456 (com código do país)" : "(00) 00000-0000"}
+          placeholder={estrangeiro ? "+código do país e número" : "(00) 00000-0000"}
         />
         <Input
           label="Email"

@@ -49,7 +49,7 @@ export function StepEndereco({
         title="Endereço do Titular"
         subtitle={
           estrangeiro
-            ? "Cliente estrangeiro: CEP, bairro e estado são opcionais."
+            ? "Cliente estrangeiro: CEP, bairro e estado/departamento são opcionais. O país informado no titular entra no contrato."
             : undefined
         }
       />
@@ -100,7 +100,7 @@ export function StepEndereco({
           required
         />
         <Input
-          label="Estado"
+          label={estrangeiro ? "Estado / Departamento" : "Estado"}
           name="estado"
           value={formData.estado}
           onChange={handleChange}
